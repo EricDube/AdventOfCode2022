@@ -1,6 +1,7 @@
 package main
 
 import (
+	"adventcode/Linked"
 	"bufio"
 	"fmt"
 	"log"
@@ -8,6 +9,12 @@ import (
 	"strconv"
 	"strings"
 )
+
+//var grid [][]rune
+
+type Grid struct {
+	row Linked.LinkedList
+}
 
 func main() {
 	file, err := os.Open("input")
@@ -18,41 +25,82 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 	// optionally, resize scanner's capacity for lines over 64K, see next example
-	var counter int
+	var gridreader []string
+	var moves []string
 	for scanner.Scan() {
 		text := scanner.Text()
-		values := strings.Split(text, ",")
-		one := strings.Split(values[0], "-")
-		two := strings.Split(values[1], "-")
-		fmt.Printf("%s %s\n", one, two)
-		leftone, _ := strconv.Atoi(one[0])
-		rightone, _ := strconv.Atoi(one[1])
-		lefttwo, _ := strconv.Atoi(two[0])
-		righttwo, _ := strconv.Atoi(two[1])
+		if strings.Contains(text, "[") {
+			//Its a grid, enter into grid
+			gridreader = append(gridreader, text)
+		} else if strings.Contains(text, "move") {
+			moves = append(moves, text)
+		}
+	}
+	var grid [10]Grid
+	var counter int
+	var lastrune rune
+	for _, g := range gridreader {
+		counter = 1
+		for j, r := range g {
+			if lastrune == []rune("[")[0] {
+				//Next spot is a character
+				//grid[len(gridreader)-i-1][(j+2)/4] = r
+				grid[((j+3)/4)-1].row.InsertAtHead(string(r))
+			}
 
-		if leftone <= lefttwo && rightone >= lefttwo {
-			counter++
-		} else if leftone <= righttwo && rightone >= righttwo {
-			counter++
-		} else if lefttwo <= leftone && righttwo >= leftone {
-			counter++
-		} else if lefttwo <= rightone && righttwo >= rightone {
+			lastrune = r
 			counter++
 		}
-
 	}
-	fmt.Println(counter)
-	day1()
-	day2()
+	for _, g := range grid {
+		g.row.Display()
+	}
+
+	//	day1(grid, moves)
+	day2(grid, moves)
 	if err := scanner.Err(); err != nil {
 		log.Fatal(err)
 	}
 }
 
-func day1() {
+func day1(grid [10]Grid, moves []string) {
+	for _, move := range moves {
+		cleaned := strings.SplitAfter(move, " ")
+		//fmt.Println(cleaned)
+		amountToMove, _ := strconv.Atoi(strings.TrimSpace(cleaned[1]))
+		from, _ := strconv.Atoi(strings.TrimSpace(cleaned[3]))
+		to, _ := strconv.Atoi(strings.TrimSpace(cleaned[5]))
+		for i := 0; i < amountToMove; i++ {
+			grid[to-1].row.InsertAtTail(grid[from-1].row.GetTail().GetData())
+			grid[from-1].row.DeleteAtTail()
+			grid[from-1].row.Display()
+			grid[to-1].row.Display()
+			fmt.Println()
+		}
+	}
 
+	for _, g := range grid {
+		g.row.Display()
+	}
 }
 
-func day2() {
-
+func day2(grid [10]Grid, moves []string) {
+	for _, move := range moves {
+		cleaned := strings.SplitAfter(move, " ")
+		//fmt.Println(cleaned)
+		amountToMove, _ := strconv.Atoi(strings.TrimSpace(cleaned[1]))
+		from, _ := strconv.Atoi(strings.TrimSpace(cleaned[3]))
+		to, _ := strconv.Atoi(strings.TrimSpace(cleaned[5]))
+		var temp Linked.LinkedList
+		for i := 0; i < amountToMove; i++ {
+			temp.InsertAtHead(grid[from-1].row.GetTail().GetData())
+			grid[from-1].row.DeleteAtTail()
+		}
+		grid[to-1].row.Append(&temp)
+		grid[to-1].row.Display()
+	}
+	fmt.Println()
+	for _, g := range grid {
+		g.row.Display()
+	}
 }
